@@ -1546,6 +1546,9 @@ const ProductsPage = ({ onAddToCart, onViewDetail, initialCategory, initialType 
 
 // Product Detail Page Component
 const ProductDetailPage = ({ product, onAddToCart, navigate }) => {
+  // FIX: Moved useState to the top, before any conditional returns
+  const [quantity, setQuantity] = useState(1);
+
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-8 text-center text-gray-600 text-xl">
@@ -1553,8 +1556,6 @@ const ProductDetailPage = ({ product, onAddToCart, navigate }) => {
       </div>
     );
   }
-
-  const [quantity, setQuantity] = useState(1);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -2065,6 +2066,7 @@ const CheckoutPage = ({ cartItems, onUpdateCartItem, onRemoveFromCart, onClearCa
 
 // Main App Component
 function App() {
+  // All useState calls are here, at the top level of the functional component, unconditionally.
   const [currentPage, setCurrentPage] = useState('home');
   const [cartItems, setCartItems] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -2073,6 +2075,7 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', message: '' });
 
+  // Navigation and cart-related functions remain here, defined once.
   const navigate = (page, product = null, category = null, type = null) => {
     setCurrentPage(page);
     setSelectedProduct(product);
@@ -2126,38 +2129,55 @@ function App() {
     setModalContent({ title: '', message: '' });
   };
 
+  // --- Core Fix for "Hooks Called Conditionally" Error ---
+  // We use a switch statement to conditionally assign the component to be rendered.
+  // This ensures that the components themselves (and their internal hooks) are always
+  // defined and only rendered, not conditionally declared or having their hooks called.
+  let PageComponent;
+  switch (currentPage) {
+    case 'home':
+      PageComponent = <HomePage navigate={navigate} onAddToCart={onAddToCart} onViewDetail={(product) => navigate('productDetail', product)} />;
+      break;
+    case 'products':
+      PageComponent = (
+        <ProductsPage
+          onAddToCart={onAddToCart}
+          onViewDetail={(product) => navigate('productDetail', product)}
+          initialCategory={initialCategory}
+          initialType={initialType}
+        />
+      );
+      break;
+    case 'productDetail':
+      PageComponent = <ProductDetailPage product={selectedProduct} onAddToCart={onAddToCart} navigate={navigate} />;
+      break;
+    case 'checkout':
+      PageComponent = (
+        <CheckoutPage
+          cartItems={cartItems}
+          onUpdateCartItem={onUpdateCartItem}
+          onRemoveFromCart={onRemoveFromCart}
+          onClearCart={onClearCart}
+          navigate={navigate}
+          showModal={showModal}
+          modalContent={modalContent}
+          onCloseModal={onCloseModal}
+          onShowModal={onShowModal}
+        />
+      );
+      break;
+    default:
+      // Fallback in case currentPage state somehow gets an unexpected value
+      PageComponent = <HomePage navigate={navigate} onAddToCart={onAddToCart} onViewDetail={(product) => navigate('productDetail', product)} />;
+  }
+  // --- End Core Fix ---
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 font-inter">
       <Header navigate={navigate} cartItemCount={cartItems.length} />
       <main className="flex-grow">
-        {currentPage === 'home' && (
-          <HomePage navigate={navigate} onAddToCart={onAddToCart} onViewDetail={(product) => navigate('productDetail', product)} />
-        )}
-        {currentPage === 'products' && (
-          <ProductsPage
-            onAddToCart={onAddToCart}
-            onViewDetail={(product) => navigate('productDetail', product)}
-            initialCategory={initialCategory}
-            initialType={initialType}
-          />
-        )}
-        {currentPage === 'productDetail' && (
-          <ProductDetailPage product={selectedProduct} onAddToCart={onAddToCart} navigate={navigate} />
-        )}
-        {currentPage === 'checkout' && (
-          <CheckoutPage
-            cartItems={cartItems}
-            onUpdateCartItem={onUpdateCartItem}
-            onRemoveFromCart={onRemoveFromCart}
-            onClearCart={onClearCart}
-            navigate={navigate}
-            showModal={showModal}
-            modalContent={modalContent}
-            onCloseModal={onCloseModal}
-            onShowModal={onShowModal}
-          />
-        )}
+        {/* Render the determined PageComponent */}
+        {PageComponent}
       </main>
       <Footer />
     </div>
