@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.js": "./static/js/main.408ed8f6.js",
-    "index.html": "./index.html",
-    "main.408ed8f6.js.map": "./static/js/main.408ed8f6.js.map"
+    "main.js": "/tmobiles/static/js/main.408ed8f6.js",
+    "index.html": "/tmobiles/index.html",
+    "main.408ed8f6.js.map": "/tmobiles/static/js/main.408ed8f6.js.map"
   },
   "entrypoints": [
     "static/js/main.408ed8f6.js"
